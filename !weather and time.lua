@@ -1,10 +1,58 @@
 script_name("Weather and Time")
-script_version_number(1)
-script_version("1")
+script_version("1.1")
 script_author("James_Bond/rubbishman/Coulson")
 local LIP = {};
 local dlstatus = require('moonloader').download_status
-
+local mod_submenus_sa = {
+	{
+		title = 'Информация о скрипте',
+		onclick = function()
+			wait(100)
+			cmdInfo()
+		end
+	},
+	{
+		title = ' '
+	},
+	{
+		title = '{AAAAAA}Настройки'
+	},
+	{
+		title = 'Настройки скрипта',
+		submenu = {
+			{
+				title = 'Изменить клавишу активации',
+				onclick = function()
+					cmdHotKey()
+				end
+			},
+			{
+				title = 'Включить/выключить уведомление при запуске',
+				onclick = function()
+					cmdInform()
+				end
+			},
+		}
+	},
+	{
+		title = ' '
+	},
+	{
+		title = '{AAAAAA}Обновления'
+	},
+	{
+		title = 'История обновлений',
+		onclick = function()
+			changelog()
+		end
+	},
+	{
+		title = 'Принудительно обновить',
+		onclick = function()
+			lua_thread.create(goupdate)
+		end
+	},
+}
 require 'lib.moonloader'
 require 'lib.sampfuncs'
 function main()
@@ -38,7 +86,8 @@ end
 function onload()
 	data = LIP.load('moonloader\\config\\weather and time.ini');
 	LIP.save('moonloader\\config\\weather and time.ini', data);
-	sampRegisterChatCommand("weather", cmdScriptInfo)
+	sampRegisterChatCommand("weather", watmenu)
+	sampRegisterChatCommand("wat", watmenu)
 	sampRegisterChatCommand("sw", cmdSetWeather)
 	sampRegisterChatCommand("setweather", cmdSetCustomWeather)
 	sampRegisterChatCommand("timenot", cmdTimeNot)
@@ -48,6 +97,15 @@ function onload()
 	if data.options.startmessage == 1 then sampAddChatMessage(('Weather and Time запущен. v '..thisScript().version), 0x348cb2) end
 	if data.options.startmessage == 1 then sampAddChatMessage(('Подробнее - /weather. Отключить это сообщение - /weathernot'), 0x348cb2) end
 end
+
+function watmenu()
+	menutrigger = 1
+end
+function menu()
+	submenus_show(mod_submenus_sa, '{348cb2}Weather & Time v'..thisScript().version..'', 'Выбрать', 'Закрыть', 'Назад')
+end
+
+
 function cmdSetWeather(param)
 	local newweather = tonumber(param)
 	if newweather == nil then
@@ -140,7 +198,6 @@ function LIP.load(fileName)
 	file:close();
 	return data;
 end
-
 function LIP.save(fileName, data)
 	assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
 	assert(type(data) == 'table', 'Parameter "data" must be a table.');
@@ -156,11 +213,10 @@ function LIP.save(fileName, data)
 	file:write(contents);
 	file:close();
 end
-
 function checkversion()
 	goplay = 0
 	local fpath = os.getenv('TEMP') .. '\\weather-version.json'
-	downloadUrlToFile('http://rubbishman.ru/dev/weather%20and%20time/version.json', fpath, function(id, status, p1, p2)
+	downloadUrlToFile('http://rubbishman.ru/dev/samp/weather%20and%20time/version.json', fpath, function(id, status, p1, p2)
 		if status == dlstatus.STATUS_ENDDOWNLOADDATA then
 		local f = io.open(fpath, 'r')
 		if f then
