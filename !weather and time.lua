@@ -1,185 +1,132 @@
+--Больше скриптов от автора можно найти на сайте: http://www.rubbishman.ru/samp
+--------------------------------------------------------------------------------
+-------------------------------------META---------------------------------------
+--------------------------------------------------------------------------------
 script_name("Weather and Time")
-script_version("1.2")
+script_version("2.02")
 script_author("James_Bond/rubbishman/Coulson")
-local LIP = {};
+--------------------------------------VAR---------------------------------------
 local dlstatus = require('moonloader').download_status
-local mod_submenus_sa = {
+color = 0x348cb2
+local inicfg = require 'inicfg'
+local data = inicfg.load({
+	options =
 	{
-		title = 'Информация о скрипте',
-		onclick = function()
-			wait(100)
-			cmdScriptInfo()
-		end
+		startmessage = 1,
+		timebycomp1 = true,
+		weatherrandom = false,
+		autoupdate = 1,
+		lastw = 1,
+		lastt = 25,
 	},
-	{
-		title = ' '
-	},
-	{
-		title = '{AAAAAA}Функции погоды'
-	},
-	{
-		title = 'Случайный выбор погоды',
-		onclick = function()
-			wait(100)
-			cmdWeather1Toggle()
-		end
-	},
-	{
-		title = 'Изменить погоду (стабильная)',
-		onclick = function()
-			wait(100)
-			cmdChangeWeatherDialog()
-		end
-	},
-	{
-		title = 'Изменить погоду (нестабильная)',
-		onclick = function()
-			wait(100)
-			cmdSetCustomWeather()
-		end
-	},
-	{
-		title = 'Открыть галерею ID погоды',
-		onclick = function()
-			cmdHelpWeather()
-		end
-	},
-	{
-		title = ' '
-	},
-	{
-		title = '{AAAAAA}Функции времени'
-	},
-	{
-		title = 'Синхронизация локального времени',
-		onclick = function()
-			cmdTimeNot()
-		end
-	},
-	{
-		title = ' '
-	},
-	{
-		title = '{AAAAAA}Настройки'
-	},
-	{
-		title = 'Настройки скрипта',
-		submenu = {
-			{
-				title = 'Включить/выключить уведомление при запуске',
-				onclick = function()
-					cmdWeatherInform()
-				end
-			},
-		}
-	},
-	{
-		title = ' '
-	},
-	{
-		title = '{AAAAAA}Обновления'
-	},
-	{
-		title = 'История обновлений',
-		onclick = function()
-			changelog()
-		end
-	},
-	{
-		title = 'Принудительно обновить',
-		onclick = function()
-			lua_thread.create(goupdate)
-		end
-	},
-}
-require 'lib.moonloader'
-require 'lib.sampfuncs'
---MAIN function
+}, 'weather and time')
+--------------------------------------------------------------------------------
+-------------------------------------MAIN---------------------------------------
+--------------------------------------------------------------------------------
 function main()
 	if not isSampLoaded() or not isCleoLoaded() or not isSampfuncsLoaded() then return end
 	while not isSampAvailable() do wait(100) end
-	lua_thread.create(checkversion)
-	while goplay == 0 or goplay == 2 do wait(100) end
-	firstload()
+	if data.options.autoupdate == 1 then
+		update()
+		while update ~= false do wait(100) end
+	end
+	if data.options.timebycomp1 == false and data.options.lastt ~= 25 then time = data.options.lastt end
 	onload()
+	menuupdate()
+	if data.options.weatherrandom == false then addweather = data.options.lastw end
 	while true do
 		wait(0)
-		if menutrigger ~= nil then menu() menutrigger = nil end
 		if weatherrandom12:status() == 'dead' then weatherrandom12:run() end
 		if timesync:status() == 'dead' then timesync:run() end
 		if addweather ~= nil then forceWeatherNow(addweather) end
+		if time and data.options.timebycomp1 == false then
+			setTimeOfDay(time, 0)
+		end
 	end
 end
---ИНИЦИАЛИЗАЦИЯ ИНИКА
-function firstload()
-	if not doesDirectoryExist("moonloader\\config") then createDirectory("moonloader\\config") end
-	if not doesFileExist("moonloader\\config\\weather and time.ini") then
-		local data =
-		{
-			options =
-			{
-				startmessage = 1,
-				timebycomp = 1,
-				weatherrandom1 = 0,
-			},
-		};
-		LIP.save('moonloader\\config\\weather and time.ini', data);
-		sampAddChatMessage(('Первый запуск скрипта. Был создан .ini: moonloader\\config\\weather and time.ini'), 0x348cb2)
+function menuuuu()
+	while true do
+		wait(0)
+		if menutrigger ~= nil then menu() menutrigger = nil end
 	end
-	data = LIP.load('moonloader\\config\\weather and time.ini');
-	if data.options.weatherrandom1 == nil then data.options.weatherrandom1 = 0 end
-	LIP.save('moonloader\\config\\weather and time.ini', data);
 end
---ПРИ ЗАГРУЗКЕ
+--------------------------------------------------------------------------------
+------------------------------------ONLOAD--------------------------------------
+--------------------------------------------------------------------------------
 function onload()
-	data = LIP.load('moonloader\\config\\weather and time.ini');
-	LIP.save('moonloader\\config\\weather and time.ini', data);
 	sampRegisterChatCommand("weather", watmenu)
 	sampRegisterChatCommand("wat", watmenu)
 	sampRegisterChatCommand("sw", cmdSetWeather)
+	sampRegisterChatCommand("st", st)
 	sampRegisterChatCommand("setweather", cmdSetCustomWeather)
-	sampRegisterChatCommand("timenot", cmdTimeNot)
-	sampRegisterChatCommand("weatherhelp", cmdHelpWeather)
-	sampRegisterChatCommand("weathernot", cmdWeatherInform)
 	sampRegisterChatCommand("weatherlog", changelog)
-	if data.options.startmessage == 1 then sampAddChatMessage(('Weather and Time запущен. v '..thisScript().version), 0x348cb2) end
-	if data.options.startmessage == 1 then sampAddChatMessage(('Подробнее - /weather. Отключить это сообщение - /weathernot'), 0x348cb2) end
+	if data.options.startmessage == 1 then sampAddChatMessage(('Weather and Time v '..thisScript().version..' запущен.'), color) end
+	if data.options.startmessage == 1 then sampAddChatMessage(('Подробнее - /weather или /wat. Отключить это сообщение можно в настройках.'), color) end
 	weatherrandom12 = lua_thread.create_suspended(weatherrandom1)
 	weatherrandom12:terminate()
 	timesync = lua_thread.create_suspended(timesync)
 	timesync:terminate()
+	lua_thread.create(menuuuu)
+	lua_thread.create(nextpls)
 end
---TOGGLE MENU
-function watmenu()
-	menutrigger = 1
-end
---MENU
-function menu()
-	submenus_show(mod_submenus_sa, '{348cb2}Weather & Time v'..thisScript().version..'', 'Выбрать', 'Закрыть', 'Назад')
-end
---СИНХРОНИЗАЦИЯ ЛОКАЛЬНОГО ВРЕМЕНИ
-function timesync()
-	while true do
-		wait(0)
-		if data.options.timebycomp == 1 then setTimeOfDay(os.date("%H"), os.date("%M")) end
-	end
-end
+--------------------------------------------------------------------------------
+------------------------------------WEATHER-------------------------------------
+--------------------------------------------------------------------------------
 --АЛГОРИТМ РАНДОМНОГО ВЫБОРА ПОГОДЫ
 function weatherrandom1()
 	while true do
 		wait(0)
-		if data.options.weatherrandom1 == 1 then
-			addweather = math.random(0, 20)
-			wait(math.random(240000, 480000))
+		if data.options.weatherrandom == true then
+			math.randomseed(os.time())
+			addweather = math.random(0, 23)
+			wait(math.random(180000, 600000))
 		end
 	end
 end
+function nextpls()
+	while true do
+		wait(0)
+		if data.options.weatherrandom == true then
+			if isKeyDown(35) and isPlayerPlaying(playerPed) and isSampfuncsConsoleActive() == false and sampIsChatInputActive() == false and sampIsDialogActive() == false then
+				weatherrandom12:terminate()
+				weatherrandom12:run()
+			end
+		else
+			if isKeyDown(35) and isPlayerPlaying(playerPed) and isSampfuncsConsoleActive() == false and sampIsChatInputActive() == false and sampIsDialogActive() == false then
+				math.randomseed(os.time())
+				addweather = math.random(0, 23)
+				data.options.lastw = addweather
+				inicfg.save(data, "weather and time")
+			end
+		end
+	end
+end
+---------------------------------SETWEATHER-------------------------------------
 --ДИАЛОГ /SETWEATHER
 function cmdChangeWeatherUnstableDialog()
 	sampShowDialog(987, "Изменить погоду", string.format("Введите ID погоды"), "Выбрать", "Закрыть", 1)
 	while sampIsDialogActive() do wait(100) end
-	cmdSetCustomWeather(sampGetCurrentDialogEditboxText(987))
+	local result, button, list, input = sampHasDialogRespond(987)
+	if button == 1 then
+		if tonumber(sampGetCurrentDialogEditboxText(987)) ~= nil then
+			cmdSetCustomWeather(sampGetCurrentDialogEditboxText(987))
+		end
+	end
 end
+--ФУНКЦИЯ /SETWEATHER
+function cmdSetCustomWeather(param)
+	local newweather = tonumber(param)
+	if newweather == nil then
+		lua_thread.create(cmdChangeWeatherUnstableDialog)
+	end
+	if newweather ~= nil then
+		addweather = newweather
+		data.options.lastw = addweather
+		inicfg.save(data, "weather and time")
+		if data.options.weatherrandom == true then cmdWeather1Toggle() end
+	end
+end
+-------------------------------------SW-----------------------------------------
 --ДИАЛОГ /SW
 function cmdChangeWeatherDialog()
 	sampShowDialog(838, "/sw - изменить погоду: ", "ID\tОписание\n00\tСтандартная погода\n01\tСтандартная погода\n02\tСтандартная погода\n03\tСтандартная погода\n04\tСтандартная погода\n05\tСтандартная погода\n06\tСтандартная погода\n07\tСтандартная погода\n08\tДождь, гроза\n09\tОблачная, туманная погода\n10\tЧистое небо\n11\tОбжигающая жара\n12\tТусклая погода\n13\tТусклая погода\n14\tТусклая погода\n15\tТусклая, бесцветная погода\n16\tТусклая, дождливая\n17\tОбжигающая жара\n18\tОбжигающая жара\n19\tПесчаная буря\n20\tТуманная\n21\tОчень тёмная, пурпурная\n22\tОчень тёмная, зеленая", "Выбрать", "Закрыть", 5)
@@ -189,7 +136,9 @@ function cmdChangeWeatherDialog()
 	if resultMain then
 		if buttonMain == 1 then
 			addweather = typ
-			if data.options.weatherrandom1 == 1 then cmdWeather1Toggle() end
+			data.options.lastw = addweather
+			inicfg.save(data, "weather and time")
+			if data.options.weatherrandom == true then cmdWeather1Toggle() end
 		end
 	end
 end
@@ -201,74 +150,212 @@ function cmdSetWeather(param)
 	end
 	if newweather ~= nil and newweather > - 1 and newweather < 23 and newweather ~= nil then
 		addweather = newweather
-		if data.options.weatherrandom1 == 1 then cmdWeather1Toggle() end
+		data.options.lastw = addweather
+		inicfg.save(data, "weather and time")
+		if data.options.weatherrandom == true then cmdWeather1Toggle() end
 	end
 end
---ФУНКЦИЯ /SETWEATHER
-function cmdSetCustomWeather(param)
-	local newweather = tonumber(param)
-	print(newweather)
-	if newweather == nil then
-		lua_thread.create(cmdChangeWeatherUnstableDialog)
-	end
-	if newweather ~= nil then
-		addweather = newweather
-		if data.options.weatherrandom1 == 1 then cmdWeather1Toggle() end
+--------------------------------------------------------------------------------
+--------------------------------------TIME--------------------------------------
+--------------------------------------------------------------------------------
+--СИНХРОНИЗАЦИЯ ЛОКАЛЬНОГО ВРЕМЕНИ
+function timesync()
+	while true do
+		wait(0)
+		if data.options.timebycomp1 == true then setTimeOfDay(os.date("%H"), os.date("%M")) end
 	end
 end
---ОКНО С ИНФОРМАЦИЕЙ О СКРИПТЕ
+--ДИАЛОГ /SETWEATHER
+function stdialog()
+	sampShowDialog(988, "Изменить время", string.format("Введите час [1-23]"), "Выбрать", "Закрыть", 1)
+	while sampIsDialogActive() do wait(100) end
+	local result, button, list, input = sampHasDialogRespond(988)
+	if button == 1 then
+		if tonumber(sampGetCurrentDialogEditboxText(988)) ~= nil and tonumber(sampGetCurrentDialogEditboxText(988)) >= 1 and tonumber(sampGetCurrentDialogEditboxText(988)) < 24 then
+			st(tonumber(sampGetCurrentDialogEditboxText(988)))
+		end
+	end
+end
+function st(param)
+	data.options.timebycomp1 = false
+	local hour = tonumber(param)
+	if hour ~= nil and hour >= 0 and hour <= 23 then
+		time = hour
+		data.options.lastt = time
+	else
+		time = nil
+	end
+	inicfg.save(data, "weather and time")
+end
+--------------------------------------------------------------------------------
+-------------------------------------MENU---------------------------------------
+--------------------------------------------------------------------------------
+--TOGGLE MENU
+function watmenu()
+	menutrigger = 1
+end
+--MENU
+function menu()
+	menuupdate()
+	submenus_show(mod_submenus_sa, '{348cb2}Weather & Time v'..thisScript().version..'', 'Выбрать', 'Закрыть', 'Назад')
+end
+--менюшка
+function menuupdate()
+	mod_submenus_sa = {
+		{
+			title = 'Информация о скрипте',
+			onclick = function()
+				wait(100)
+				cmdScriptInfo()
+			end
+		},
+		-- код директив ffi спизжен у FYP'a
+		{
+			title = 'Сказать спасибо',
+			onclick = function()
+				local ffi = require 'ffi'
+				ffi.cdef [[
+								void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+								uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+							]]
+				local shell32 = ffi.load 'Shell32'
+				local ole32 = ffi.load 'Ole32'
+				ole32.CoInitializeEx(nil, 2 + 4)
+				print(shell32.ShellExecuteA(nil, 'open', 'http://rubbishman.ru/donate', nil, nil, 1))
+			end
+		},
+		{
+			title = 'Связаться с автором (все баги сюда)',
+			onclick = function()
+				local ffi = require 'ffi'
+				ffi.cdef [[
+								void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+								uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+							]]
+				local shell32 = ffi.load 'Shell32'
+				local ole32 = ffi.load 'Ole32'
+				ole32.CoInitializeEx(nil, 2 + 4)
+				print(shell32.ShellExecuteA(nil, 'open', 'http://rubbishman.ru/sampcontact', nil, nil, 1))
+			end
+		},
+		{
+			title = ' '
+		},
+		{
+			title = '{AAAAAA}Функции погоды'
+		},
+		{
+			title = string.format("Случайный выбор погоды: %s", data.options.weatherrandom),
+			onclick = function()
+				cmdWeather1Toggle()
+				menuupdate()
+				menu()
+			end
+		},
+		{
+			title = 'Изменить погоду (стабильная)',
+			onclick = function()
+				wait(100)
+				cmdChangeWeatherDialog()
+			end
+		},
+		{
+			title = 'Изменить погоду (нестабильная)',
+			onclick = function()
+				wait(100)
+				cmdSetCustomWeather()
+			end
+		},
+		{
+			title = 'Открыть галерею ID погоды',
+			onclick = function()
+				cmdHelpWeather()
+			end
+		},
+		{
+			title = ' '
+		},
+		{
+			title = '{AAAAAA}Функции времени'
+		},
+		{
+			title = string.format("Синхронизация лок. времени: %s", data.options.timebycomp1),
+			onclick = function()
+				cmdTimeNot()
+				menuupdate()
+				menu()
+			end
+		},
+		{
+			title = 'Изменить время вручную',
+			onclick = function()
+				stdialog()
+			end
+		},
+		{
+			title = ' '
+		},
+		{
+			title = '{AAAAAA}Настройки'
+		},
+		{
+			title = 'Настройки скрипта',
+			submenu = {
+				{
+					title = 'Включить/выключить уведомление при запуске',
+					onclick = function()
+						cmdWeatherInform()
+					end
+				},
+				{
+					title = 'Включить/выключить автообновление',
+					onclick = function()
+						cmdWatUpdate()
+					end
+				},
+			}
+		},
+		{
+			title = ' '
+		},
+		{
+			title = '{AAAAAA}Обновления'
+		},
+		{
+			title = 'Открыть страницу скрипта',
+			onclick = function()
+				local ffi = require 'ffi'
+				ffi.cdef [[
+							void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+							uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+						]]
+				local shell32 = ffi.load 'Shell32'
+				local ole32 = ffi.load 'Ole32'
+				ole32.CoInitializeEx(nil, 2 + 4)
+				print(shell32.ShellExecuteA(nil, 'open', 'http://rubbishman.ru/samp/wat', nil, nil, 1))
+			end
+		},
+		{
+			title = 'История обновлений',
+			onclick = function()
+				changelog()
+			end
+		},
+		{
+			title = 'Принудительно обновить',
+			onclick = function()
+				lua_thread.create(goupdate)
+			end
+		},
+	}
+end
+--контент
 function cmdScriptInfo()
-	sampShowDialog(2342, "{348cb2}Weather and Time. Автор: James_Bond/rubbishman/Coulson.", "{ffcc00}Для чего этот скрипт?\n{ffffff}Многих игроков раздражает стандартная погода на серверах SA:MP. Её не любят менять из-за того, что\nне у всех людей в "..os.date("%Y").." году достаточно мощный компьютер, чтобы рендерить дождь игры 2004 года.\nДанный скрипт призван устранить эту проблему, дав возможность управлять погодой и временем.\n{AAAAAA}Функции погоды:\n{348cb2}Случайный выбор погоды: {ffffff}искусственный интеллект выбирает случайную погоду каждые 4-8 минут.\n{348cb2}Изменить погоду (стабильная): {ffffff}изменение погоды на стабильную (0-22) через диалоговое окно.\n{348cb2}Изменить погоду (нестабильная): {ffffff}изменение погоды на нестабильную (любой id) через диалоговое окно.\n{348cb2}Открыть галерею ID погоды: {ffffff}открыть в браузере галерею с id'ами погоды.\n{AAAAAA}Функции времени:\n{348cb2}Синхронизация локального времени: {ffffff}функция меняет время игры на время компьютера.\n{ffcc00}Доступные команды:\n{00ccff}/weather {ffffff}или {00ccff}/wat{ffffff} - меню скрипта\n{00ccff}/sw {ffffff}- изменить погоду через диалоговое окно\n{00ccff}/sw [0-22] {ffffff}- изменить погоду по id (стабильная погода)\n{00ccff}/setweather {ffffff}- изменить погоду через диалоговое окно (нестабильная погода)\n{00ccff}/setweather [любой id] {ffffff}- изменить погоду по id (нестабильная погода)\n{00ccff}/weatherhelp {ffffff}- открыть галерею id'ов в браузере\n{00ccff}/timenot {ffffff}- включить/выключить функцию синхронизации локального времени\n{00ccff}/weathernot {ffffff}- включить/выключить уведомление при запуске SA:MP\n{00ccff}/weatherlog {ffffff}- changelog скрипта\n", "Лады")
+	sampShowDialog(2342, "{348cb2}Weather and Time. Автор: James_Bond/rubbishman/Coulson.", "{ffcc00}Для чего этот скрипт?\n{ffffff}Скрипт предоставляет кучу возможностей для управления погодой и временем SA:MP.\nНаступило будущее: теперь можно рендерить дождь 2004 года без лагов.\nВыделяется среди прочих уникальными функциями, удобством и настройками.\n{AAAAAA}Функции погоды:\n{348cb2}Случайный выбор погоды: {ffffff}ИИ случайно меняет погоду каждые 3-10 минут.\n{348cb2}Изменить погоду (стабильная): {ffffff}изменение погоды на стабильную (0-22).\n{348cb2}Изменить погоду (нестабильная): {ffffff}изменение погоды на нестабильную (любой id).\n{348cb2}Открыть галерею ID погоды: {ffffff}открыть в браузере галерею с id'ами погоды.\n{AAAAAA}Функции времени:\n{348cb2}Синхронизация локального времени: {ffffff}функция меняет время игры на время компьютера.\n{348cb2}Изменить время вручную: {ffffff}изменение времени на заданный час.\n{ffcc00}Доступные команды:\n{00ccff}/weather (/wat){ffffff} - меню скрипта.\n{00ccff}/weatherlog {ffffff}- changelog скрипта.\n{AAAAAA}Функции времени:\n{00ccff}/st [0-23] {ffffff}- изменить время.\n{AAAAAA}Функции погоды:\n{00ccff}/sw {ffffff}- изменить погоду через диалоговое окно.\n{00ccff}/sw [0-22] {ffffff}- изменить погоду по id (стабильная погода).\n{00ccff}/setweather {ffffff}- изменить погоду через диалоговое окно (нестабильная погода).\n{00ccff}/setweather [любой id] {ffffff}- изменить погоду по id (нестабильная погода).\n{00ccff}Клавиша \"End\"{ffffff} - устанавливает случайную стабильную погоду. Совместимо с ИИ-режимом.", "Лады")
 end
---ФУНКЦИЯ ОТКРЫВАЕТ В БРАУЗЕРЕ ГАЛЕРЕЮ ПОГОД
-function cmdHelpWeather()
-	local ffi = require 'ffi'
-	ffi.cdef [[
-					void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
-					uint32_t __stdcall CoInitializeEx(void*, uint32_t);
-				]]
-	local shell32 = ffi.load 'Shell32'
-	local ole32 = ffi.load 'Ole32'
-	ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
-	print(shell32.ShellExecuteA(nil, 'open', 'http://dev.prineside.com/gtasa_weather_id/', nil, nil, 1))
-end
---СHANGELOG
 function changelog()
-	sampShowDialog(2342, "{348cb2}Weather & Time v"..thisScript().version.."", "{ffcc00}v1.2 [03.11.17]\n{ffffff}У скрипта появилось меню.\n{ffcc00}v1.1 [26.10.17]\n{ffffff}Общие исправления.\n{ffcc00}v1.0 [23.10.17]\n{ffffff}Первый релиз скрипта.", "Закрыть")
+	sampShowDialog(2342, "{348cb2}Weather & Time v"..thisScript().version.."", "{ffcc00}v2.0 [07.12.17]\n{ffffff}1. Код скрипта теперь открыт.\n2. Добавлено изменение времени.\n3. Добавлен рандом по нажатию END.\n4. Переработано главное меню, окно с информацией о скрипте.\n5. Установленные значения сохраняются и загружаются после релога.\n6. Доработана система автообновления. Теперь его можно отключить.\n7. Теперь скрипт использует 'inicfg', стабильность iniшек.\n8. Куча исправлений тупых ошибок.\n{ffcc00}v1.2 [03.11.17]\n{ffffff}1. У скрипта появилось меню.\n{ffcc00}v1.1 [26.10.17]\n{ffffff}1. Общие исправления.\n{ffcc00}v1.0 [23.10.17]\n{ffffff}1. Первый релиз скрипта.", "Закрыть")
 end
--- ИЗМЕНЕНИЕ НАСТРОЕК
--- ИЗМЕНЕНИЕ НАСТРОЕК
-function cmdWeather1Toggle()
-	if data.options.weatherrandom1 == 1 then
-		data.options.weatherrandom1 = 0 sampAddChatMessage(('Алгоритм изменения погоды деактивирован'), 0x348cb2)
-	else
-		data.options.weatherrandom1 = 1 sampAddChatMessage(('Алгоритм изменения погоды активирован'), 0x348cb2)
-	end
-	LIP.save('moonloader\\config\\weather and time.ini', data);
-	data = LIP.load('moonloader\\config\\weather and time.ini');
-end
-function cmdWeatherInform()
-	if data.options.startmessage == 1 then
-		data.options.startmessage = 0 sampAddChatMessage(('Уведомление активации Weather and Time при запуске игры отключено'), 0x348cb2)
-	else
-		data.options.startmessage = 1 sampAddChatMessage(('Уведомление активации Weather and Time при запуске игры включено'), 0x348cb2)
-	end
-	LIP.save('moonloader\\config\\weather and time.ini', data);
-	data = LIP.load('moonloader\\config\\weather and time.ini');
-end
-function cmdTimeNot()
-	if data.options.timebycomp == 1 then
-		data.options.timebycomp = 0 sampAddChatMessage(('Синхронизация локального времени отключена'), 0x348cb2)
-	else
-		data.options.timebycomp = 1 sampAddChatMessage(('Синхронизация локального времени включена'), 0x348cb2)
-	end
-	LIP.save('moonloader\\config\\weather and time.ini', data);
-	data = LIP.load('moonloader\\config\\weather and time.ini');
-end
--- DO NOT TOUCH
--- DO NOT TOUCH
--- DO NOT TOUCH
--- DO NOT TOUCH
 --функция отвечает за удобные менюшки, спасибо фипу
 function submenus_show(menu, caption, select_button, close_button, back_button)
 	select_button, close_button, back_button = select_button or 'Select', close_button or 'Close', back_button or 'Back'
@@ -309,55 +396,57 @@ function submenus_show(menu, caption, select_button, close_button, back_button)
 	end
 	return display(menu, 31337, caption or menu.title)
 end
---функция загрузки из иника
-function LIP.load(fileName)
-	assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
-	local file = assert(io.open(fileName, 'r'), 'Error loading file : ' .. fileName);
-	local data = {};
-	local section;
-	for line in file:lines() do
-		local tempSection = line:match('^%[([^%[%]]+)%]$');
-		if(tempSection)then
-			section = tonumber(tempSection) and tonumber(tempSection) or tempSection;
-			data[section] = data[section] or {};
-		end
-		local param, value = line:match('^([%w|_]+)%s-=%s-(.+)$');
-		if(param and value ~= nil)then
-			if(tonumber(value))then
-				value = tonumber(value);
-			elseif(value == 'true')then
-				value = true;
-			elseif(value == 'false')then
-				value = false;
-			end
-			if(tonumber(param))then
-				param = tonumber(param);
-			end
-			data[section][param] = value;
-		end
-	end
-	file:close();
-	return data;
+--------------------------------------------------------------------------------
+-----------------------------------SETTINGS-------------------------------------
+--------------------------------------------------------------------------------
+--ФУНКЦИЯ ОТКРЫВАЕТ В БРАУЗЕРЕ ГАЛЕРЕЮ ПОГОД
+function cmdHelpWeather()
+	local ffi = require 'ffi'
+	ffi.cdef [[
+					void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
+					uint32_t __stdcall CoInitializeEx(void*, uint32_t);
+				]]
+	local shell32 = ffi.load 'Shell32'
+	local ole32 = ffi.load 'Ole32'
+	ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
+	print(shell32.ShellExecuteA(nil, 'open', 'http://dev.prineside.com/gtasa_weather_id/', nil, nil, 1))
 end
---функция сохранения в иник
-function LIP.save(fileName, data)
-	assert(type(fileName) == 'string', 'Parameter "fileName" must be a string.');
-	assert(type(data) == 'table', 'Parameter "data" must be a table.');
-	local file = assert(io.open(fileName, 'w+b'), 'Error loading file :' .. fileName);
-	local contents = '';
-	for section, param in pairs(data) do
-		contents = contents .. ('[%s]\n'):format(section);
-		for key, value in pairs(param) do
-			contents = contents .. ('%s=%s\n'):format(key, tostring(value));
-		end
-		contents = contents .. '\n';
+function cmdWeather1Toggle()
+	if data.options.weatherrandom == true then
+		data.options.weatherrandom = false sampAddChatMessage(('[WAT]: Алгоритм изменения погоды деактивирован'), color)
+	else
+		data.options.weatherrandom = true sampAddChatMessage(('[WAT]: Алгоритм изменения погоды активирован'), color)
 	end
-	file:write(contents);
-	file:close();
+	inicfg.save(data, "weather and time")
 end
---функция проверки версии
-function checkversion()
-	goplay = 0
+function cmdWeatherInform()
+	if data.options.startmessage == 1 then
+		data.options.startmessage = 0 sampAddChatMessage(('[WAT]: Уведомление активации Weather and Time при запуске игры отключено'), color)
+	else
+		data.options.startmessage = 1 sampAddChatMessage(('[WAT]: Уведомление активации Weather and Time при запуске игры включено'), color)
+	end
+	inicfg.save(data, "weather and time")
+end
+function cmdTimeNot()
+	if data.options.timebycomp1 == true then
+		data.options.timebycomp1 = false sampAddChatMessage(('[WAT]: Синхронизация локального времени отключена'), color)
+	else
+		data.options.timebycomp1 = true sampAddChatMessage(('[WAT]: Синхронизация локального времени включена'), color)
+	end
+	inicfg.save(data, "weather and time")
+end
+function cmdWatUpdate()
+	if data.options.autoupdate == 1 then
+		data.options.autoupdate = 0 sampAddChatMessage(('[WAT]: Автообновление WAT выключено'), color)
+	else
+		data.options.autoupdate = 1 sampAddChatMessage(('[WAT]: Автообновление WAT включено'), color)
+	end
+	inicfg.save(data, "weather and time")
+end
+--------------------------------------------------------------------------------
+------------------------------------UPDATE--------------------------------------
+--------------------------------------------------------------------------------
+function update()
 	local fpath = os.getenv('TEMP') .. '\\weather-version.json'
 	downloadUrlToFile('http://rubbishman.ru/dev/samp/weather%20and%20time/version.json', fpath, function(id, status, p1, p2)
 		if status == dlstatus.STATUS_ENDDOWNLOADDATA then
@@ -368,25 +457,23 @@ function checkversion()
 			if info and info.latest then
 				version = tonumber(info.latest)
 				if version > tonumber(thisScript().version) then
-					sampAddChatMessage(('[Weather and Time]: Обнаружено обновление. AutoReload может конфликтовать. Обновляюсь..'), 0x348cb2)
-					sampAddChatMessage(('[Weather and Time]: Текущая версия: '..thisScript().version..". Новая версия: "..version), 0x348cb2)
-					goplay = 2
 					lua_thread.create(goupdate)
+				else
+					update = false
 				end
 			end
 		end
 	end
 end)
-wait(1000)
-if goplay ~= 2 then goplay = 1 end
 end
---функция обновления
+--скачивание актуальной версии
 function goupdate()
+sampAddChatMessage(('[WAT]: Обнаружено обновление. AutoReload может конфликтовать. Обновляюсь..'), color)
+sampAddChatMessage(('[WAT]: Текущая версия: '..thisScript().version..". Новая версия: "..version), color)
 wait(300)
 downloadUrlToFile(updatelink, thisScript().path, function(id3, status1, p13, p23)
 	if status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-	sampAddChatMessage(('[Weather and Time]: Обновление завершено! Подробнее об обновлении - /weatherlog.'), 0x348cb2)
-	goplay = 1
+	sampAddChatMessage(('[WAT]: Обновление завершено! Подробнее об обновлении - /weatherlog.'), color)
 	thisScript():reload()
 end
 end)
