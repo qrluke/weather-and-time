@@ -3,7 +3,7 @@
 -------------------------------------META---------------------------------------
 --------------------------------------------------------------------------------
 script_name("Weather and Time")
-script_version("2.8")
+script_version("2.81")
 script_author("rubbishman")
 --------------------------------------VAR---------------------------------------
 local dlstatus = require('moonloader').download_status
@@ -516,7 +516,6 @@ function goupdate()
         print('Загрузка обновления завершена.')
         sampAddChatMessage((prefix..'Обновление завершено! Подробнее об обновлении - /pisslog.'), color)
         goupdatestatus = true
-        wait(100)
         thisScript():reload()
       end
       if status1 == dlstatus.STATUSEX_ENDDOWNLOAD then
