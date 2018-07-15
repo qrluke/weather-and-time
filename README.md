@@ -1,10 +1,11 @@
 # Описание 
 Скрипт добавляет кучу возможностей для управления погодой и временем. Отличается от похожих стабильностью, некоторыми уникальными функциями, удобством использования (не нужно учить таблицу погоды) и сохранением настроек (если установил погоду/время, то она никогда не "слетит", даже после релога).
 
-**Требования:** [CLEO 4.3](http://cleo.li/?lang=ru), [SAMPFUNCS 5.3.3](https://blast.hk/threads/17/), [MoonLoader](https://blast.hk/threads/13305/).  
+**Требования:** [CLEO 4+](http://cleo.li/?lang=ru), [SAMPFUNCS 5.3.3](https://blast.hk/threads/17/), [MoonLoader](https://blast.hk/threads/13305/).  
 **Активация:** Скрипт активируется автоматом, а настроить его можно в собственной менюшке (/weather или /wat). В скрипте реализовано автообновление (можно отключить в настройках).  
 
-**Автор:** [rubbishman (James_Bond / Phil_Coulson)](http://rubbishman.ru/samp). Использован "submenus_show" FYP'a.  
+**Автор:** [qrlk (James_Bond / Phil_Coulson)](http://rubbishman.ru/samp).  
+**Обсуждение в группе VK:** [ссылка](https://vk.com/topic-168860334_38597259).
 ## Функции погоды:
 
 * **Случайный выбор погоды.**
@@ -34,6 +35,6 @@
   * Устанавливает время **0-23** часа через меню или команду **/st [0-23]**.
 
 # Скриншоты
-![https://i.imgur.com/spWBMaw.jpg?1](https://i.imgur.com/spWBMaw.jpg?1)  
+![https://i.imgur.com/EcCpOim.png?1](https://i.imgur.com/EcCpOim.png?1)  
 ![https://i.imgur.com/zXQlH89.jpg?2](https://i.imgur.com/zXQlH89.jpg?2)  
 ![https://i.imgur.com/7lQrOZq.jpg?2](https://i.imgur.com/7lQrOZq.jpg?2)  
