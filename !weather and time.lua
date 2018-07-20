@@ -4,11 +4,13 @@
 -------------------------------------META---------------------------------------
 --------------------------------------------------------------------------------
 script_name("Weather and Time")
-script_version("2.9")
+script_version("2.91")
 script_author("qrlk")
 script_url("http://vk.com/qrlk.mods")
 script_changelog =
-[[{ffcc00}v2.9 [15.07.18]{ffffff}
+[[{ffcc00}v2.91 [20.07.18]{ffffff}
+1. Фикс случайного выбора погоды.
+{ffcc00}v2.9 [15.07.18]{ffffff}
 1. Ребрендинг, группа вк. Серьёзно, подписывайтесь.
 2. Теперь changelog можно прочитать, открыв файл блокнотом.
 {ffcc00}v2.86 [17.05.18]{ffffff}
@@ -50,7 +52,7 @@ local data = inicfg.load({
     autoupdate = 1,
     lastw = 1,
     lastt = 25,
-		showad = true,
+    showad = true,
   },
 }, 'weather and time')
 --------------------------------------------------------------------------------
@@ -63,14 +65,14 @@ function main()
     update()
     while update ~= false do wait(100) end
   end
-	if data.options.showad == true then
-		sampAddChatMessage("[WAT]: Внимание! У нас появилась группа ВКонтакте: vk.com/qrlk.mods", -1)
-		sampAddChatMessage("[WAT]: Подписавшись на неё, вы сможете получать новости об обновлениях,", -1)
-		sampAddChatMessage("[WAT]: новых скриптах, а так же учавствовать в розыгрышах платных скриптов!", -1)
-		sampAddChatMessage("[WAT]: Это сообщение показывается один раз для каждого скрипта. Спасибо за внимание.", -1)
-		data.options.showad = false
-		inicfg.save(data, "weather and time")
-	end
+  if data.options.showad == true then
+    sampAddChatMessage("[WAT]: Внимание! У нас появилась группа ВКонтакте: vk.com/qrlk.mods", - 1)
+    sampAddChatMessage("[WAT]: Подписавшись на неё, вы сможете получать новости об обновлениях,", - 1)
+    sampAddChatMessage("[WAT]: новых скриптах, а так же учавствовать в розыгрышах платных скриптов!", - 1)
+    sampAddChatMessage("[WAT]: Это сообщение показывается один раз для каждого скрипта. Спасибо за внимание.", - 1)
+    data.options.showad = false
+    inicfg.save(data, "weather and time")
+  end
   if data.options.timebycomp1 == false and data.options.lastt ~= 25 then time = data.options.lastt end
   onload()
   menuupdate()
@@ -105,6 +107,9 @@ function onload()
   if data.options.startmessage == 1 then sampAddChatMessage(('Подробнее - /weather или /wat. Отключить это сообщение можно в настройках.'), color) end
   weatherrandom12 = lua_thread.create_suspended(weatherrandom1)
   weatherrandom12:terminate()
+  if data.options.weatherrandom == true then
+    weatherrandom12:run()
+  end
   timesync = lua_thread.create_suspended(timesync)
   timesync:terminate()
   lua_thread.create(menuuuu)
@@ -348,20 +353,20 @@ function menuupdate()
     {
       title = '{AAAAAA}Обновления'
     },
-		{
-			title = 'Подписывайтесь на группу ВКонтакте!',
-			onclick = function()
-				local ffi = require 'ffi'
-				ffi.cdef [[
+    {
+      title = 'Подписывайтесь на группу ВКонтакте!',
+      onclick = function()
+        local ffi = require 'ffi'
+        ffi.cdef [[
 								void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
 								uint32_t __stdcall CoInitializeEx(void*, uint32_t);
 							]]
-				local shell32 = ffi.load 'Shell32'
-				local ole32 = ffi.load 'Ole32'
-				ole32.CoInitializeEx(nil, 2 + 4)
-				print(shell32.ShellExecuteA(nil, 'open', 'http://vk.com/qrlk.mods', nil, nil, 1))
-			end
-		},
+        local shell32 = ffi.load 'Shell32'
+        local ole32 = ffi.load 'Ole32'
+        ole32.CoInitializeEx(nil, 2 + 4)
+        print(shell32.ShellExecuteA(nil, 'open', 'http://vk.com/qrlk.mods', nil, nil, 1))
+      end
+    },
     {
       title = 'Открыть страницу скрипта',
       onclick = function()
