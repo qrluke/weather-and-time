@@ -3,10 +3,10 @@
 -------------------------------------META---------------------------------------
 --------------------------------------------------------------------------------
 script_name("Weather and Time")
-script_version("30.06.2019")
+script_version("30.06.2019-2")
 script_author("qrlk")
 script_url("http://qrlk.me/samp/wat")
-script_description("Мощный инструмент для изменения внутреигрового погоды и времени.")
+script_description("Мощный инструмент для изменения внутриигрового погоды и времени.")
 --------------------------------------VAR---------------------------------------
 local dlstatus = require('moonloader').download_status
 color = 0x348cb2
@@ -52,7 +52,11 @@ function main()
     if timesync:status() == 'dead' then timesync:run() end
     if addweather ~= nil then forceWeatherNow(addweather) end
     if time and data.options.timebycomp1 == false then
-      setTimeOfDay(time, 0)
+      if minutes == nil then
+        setTimeOfDay(time, 0)
+      else
+        setTimeOfDay(time, minutes)
+      end
     end
   end
 end
@@ -213,8 +217,10 @@ function split(s, delimiter)
 end
 function timelapse(str)
   if str == "" then
-    sampAddChatMessage(prefix.."Использование: /timelapse [час начала] [сколько часов крутить] [задержка смены (мс)] [задержка перед стартом]", - 1)
+    sampAddChatMessage(prefix.."Использование: /timelapse [час начала] [сколько часов крутить] [задержка смены часа (мс)] [задержка перед стартом]", - 1)
   else
+		restore_set1 = data.options.timebycomp1
+		restore_set2 = time
     data.options.timebycomp1 = false
     tab = split(str, " ")
     lengthNum = 0
@@ -228,20 +234,26 @@ function timelapse(str)
       delay2 = tonumber(tab[4])
     end
     if start == nil or finish == nil or delay1 == nil or delay2 == nil or start < 0 or start >= 24 or finish < 1 or delay1 < 0 or delay2 < 0 then
-      sampAddChatMessage(prefix.."Ошибка ввода. Использование: /timelapse [час начала] [сколько часов крутить] [задержка смены (мс)] [задержка перед стартом]", color)
+      sampAddChatMessage(prefix.."Ошибка ввода. Использование: /timelapse [час начала] [сколько часов крутить] [задержка смены часа (мс)] [задержка перед стартом]", color)
       return
     end
     wait(delay2)
-    for i = 1, finish, 1 do
-      if start + i >= 24 then
-        time = (start + i) % 24
-			else
-        time = start + i
+		--a = os.clock()
+		for i = 1, finish, 1 do
+      for z = 0, 12, 1 do
+        if start + i >= 24 then
+          time = (start + i) % 24
+        else
+          time = start + i
+        end
+				minutes = z*5
+				wait(math.floor(delay1 / 12))
+			--	print(time..":"..minutes.." Delay: "..math.floor(delay1 / 12)..". Time"..os.clock()-a)
       end
-      data.options.lastt = time
-      inicfg.save(data, "weather and time")
-      wait(delay1)
     end
+		minutes = nil
+		data.options.timebycomp1 = restore_set1
+		time = restore_set2
   end
 end
 --------------------------------------------------------------------------------
