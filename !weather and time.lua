@@ -1,43 +1,12 @@
 --Больше скриптов от автора можно найти в группе ВК: http://vk.com/qrlk.mods
---Больше скриптов от автора можно найти на сайте: http://www.rubbishman.ru/samp
 --------------------------------------------------------------------------------
 -------------------------------------META---------------------------------------
 --------------------------------------------------------------------------------
 script_name("Weather and Time")
-script_version("2.91")
+script_version("30.06.2019")
 script_author("qrlk")
-script_url("http://vk.com/qrlk.mods")
-script_changelog =
-[[{ffcc00}v2.91 [20.07.18]{ffffff}
-1. Фикс случайного выбора погоды.
-{ffcc00}v2.9 [15.07.18]{ffffff}
-1. Ребрендинг, группа вк. Серьёзно, подписывайтесь.
-2. Теперь changelog можно прочитать, открыв файл блокнотом.
-{ffcc00}v2.86 [17.05.18]{ffffff}
-1. Улучшение автообновления.
-2. Телеметрия объеденина с проверкой обновления.
-3. /pisslog -> /weatherlog (fix).
-{ffcc00}v2.1 [17.05.18]{ffffff}
-1. Пофикшен баг автообновления.
-2. Меньше ЧСВ.
-3. Вырезан донат.
-4. Телеметрия.
-{ffcc00}v2.0 [07.12.17]{ffffff}
-1. Код скрипта теперь открыт.
-2. Добавлено изменение времени.
-3. Добавлен рандом по нажатию END.
-4. Переработано главное меню, окно с информацией о скрипте.
-5. Установленные значения сохраняются и загружаются после релога.
-6. Доработана система автообновления. Теперь его можно отключить.
-7. Теперь скрипт использует 'inicfg', стабильность iniшек.
-8. Куча исправлений тупых ошибок.
-{ffcc00}v1.2 [03.11.17]{ffffff}
-1. У скрипта появилось меню.
-{ffcc00}v1.1 [26.10.17]{ffffff}
-1. Общие исправления.
-{ffcc00}v1.0 [23.10.17]{ffffff}
-1. Первый релиз скрипта.
-]]
+script_url("http://qrlk.me/samp/wat")
+script_description("Мощный инструмент для изменения внутреигрового погоды и времени.")
 --------------------------------------VAR---------------------------------------
 local dlstatus = require('moonloader').download_status
 color = 0x348cb2
@@ -62,9 +31,9 @@ function main()
   if not isSampLoaded() or not isCleoLoaded() or not isSampfuncsLoaded() then return end
   while not isSampAvailable() do wait(100) end
   if data.options.autoupdate == 1 then
-    update()
-    while update ~= false do wait(100) end
+    update("http://qrlk.me/dev/moonloader/weather%20and%20time/stats.php", '['..string.upper(thisScript().name)..']: ', "http://qrlk.me/sampvk", "watchangelog")
   end
+  openchangelog("watchangelog", "http://qrlk.me/changelog/wat")
   if data.options.showad == true then
     sampAddChatMessage("[WAT]: Внимание! У нас появилась группа ВКонтакте: vk.com/qrlk.mods", - 1)
     sampAddChatMessage("[WAT]: Подписавшись на неё, вы сможете получать новости об обновлениях,", - 1)
@@ -103,6 +72,7 @@ function onload()
   sampRegisterChatCommand("st", st)
   sampRegisterChatCommand("setweather", cmdSetCustomWeather)
   sampRegisterChatCommand("weatherlog", changelog)
+  sampRegisterChatCommand("timelapse", function(param) lua_thread.create(timelapse, param) end)
   if data.options.startmessage == 1 then sampAddChatMessage(('Weather and Time v '..thisScript().version..' запущен.'), color) end
   if data.options.startmessage == 1 then sampAddChatMessage(('Подробнее - /weather или /wat. Отключить это сообщение можно в настройках.'), color) end
   weatherrandom12 = lua_thread.create_suspended(weatherrandom1)
@@ -233,6 +203,47 @@ function st(param)
   end
   inicfg.save(data, "weather and time")
 end
+--time lapse
+function split(s, delimiter)
+  result = {};
+  for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+    table.insert(result, match);
+  end
+  return result;
+end
+function timelapse(str)
+  if str == "" then
+    sampAddChatMessage(prefix.."Использование: /timelapse [час начала] [сколько часов крутить] [задержка смены (мс)] [задержка перед стартом]", - 1)
+  else
+    data.options.timebycomp1 = false
+    tab = split(str, " ")
+    lengthNum = 0
+    for k, v in pairs(tab) do -- for every key in the table with a corresponding non-nil value
+      lengthNum = lengthNum + 1
+    end
+    if lengthNum == 4 then
+      start = tonumber(tab[1])
+      finish = tonumber(tab[2])
+      delay1 = tonumber(tab[3])
+      delay2 = tonumber(tab[4])
+    end
+    if start == nil or finish == nil or delay1 == nil or delay2 == nil or start < 0 or start >= 24 or finish < 1 or delay1 < 0 or delay2 < 0 then
+      sampAddChatMessage(prefix.."Ошибка ввода. Использование: /timelapse [час начала] [сколько часов крутить] [задержка смены (мс)] [задержка перед стартом]", color)
+      return
+    end
+    wait(delay2)
+    for i = 1, finish, 1 do
+      if start + i >= 24 then
+        time = (start + i) % 24
+			else
+        time = start + i
+      end
+      data.options.lastt = time
+      inicfg.save(data, "weather and time")
+      wait(delay1)
+    end
+  end
+end
 --------------------------------------------------------------------------------
 -------------------------------------MENU---------------------------------------
 --------------------------------------------------------------------------------
@@ -255,19 +266,10 @@ function menuupdate()
         cmdScriptInfo()
       end
     },
-    -- код директив ffi спизжен у FYP'a
     {
       title = 'Связаться с автором (все баги сюда)',
       onclick = function()
-        local ffi = require 'ffi'
-        ffi.cdef [[
-								void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
-								uint32_t __stdcall CoInitializeEx(void*, uint32_t);
-							]]
-        local shell32 = ffi.load 'Shell32'
-        local ole32 = ffi.load 'Ole32'
-        ole32.CoInitializeEx(nil, 2 + 4)
-        print(shell32.ShellExecuteA(nil, 'open', 'http://rubbishman.ru/sampcontact', nil, nil, 1))
+        os.execute('explorer "http://qrlk.me/sampcontact"')
       end
     },
     {
@@ -325,6 +327,12 @@ function menuupdate()
       end
     },
     {
+      title = 'NEW: timelapse',
+      onclick = function()
+        timelapse("")
+      end
+    },
+    {
       title = ' '
     },
     {
@@ -356,48 +364,38 @@ function menuupdate()
     {
       title = 'Подписывайтесь на группу ВКонтакте!',
       onclick = function()
-        local ffi = require 'ffi'
-        ffi.cdef [[
-								void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
-								uint32_t __stdcall CoInitializeEx(void*, uint32_t);
-							]]
-        local shell32 = ffi.load 'Shell32'
-        local ole32 = ffi.load 'Ole32'
-        ole32.CoInitializeEx(nil, 2 + 4)
-        print(shell32.ShellExecuteA(nil, 'open', 'http://vk.com/qrlk.mods', nil, nil, 1))
+        os.execute('explorer "http://qrlk.me/sampvk"')
       end
     },
     {
       title = 'Открыть страницу скрипта',
       onclick = function()
-        local ffi = require 'ffi'
-        ffi.cdef [[
-							void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
-							uint32_t __stdcall CoInitializeEx(void*, uint32_t);
-						]]
-        local shell32 = ffi.load 'Shell32'
-        local ole32 = ffi.load 'Ole32'
-        ole32.CoInitializeEx(nil, 2 + 4)
-        print(shell32.ShellExecuteA(nil, 'open', 'http://rubbishman.ru/samp/wat', nil, nil, 1))
+        os.execute('explorer "http://qrlk.me/samp/wat"')
       end
     },
     {
       title = 'История обновлений',
       onclick = function()
-        changelog()
-      end
-    },
-    {
-      title = 'Принудительно обновить',
-      onclick = function()
-        lua_thread.create(goupdate)
+        lua_thread.create(
+          function()
+            if changelogurl == nil then
+              changelogurl = "http://qrlk.me/changelog/wat"
+            end
+            sampShowDialog(222228, "{ff0000}Информация об обновлении", "{ffffff}"..thisScript().name.." {ffe600}собирается открыть свой changelog для вас.\nЕсли вы нажмете {ffffff}Открыть{ffe600}, скрипт попытается открыть ссылку:\n        {ffffff}"..changelogurl.."\n{ffe600}Если ваша игра крашнется, вы можете открыть эту ссылку сами.", "Открыть", "Отменить")
+            while sampIsDialogActive() do wait(100) end
+            local result, button, list, input = sampHasDialogRespond(222228)
+            if button == 1 then
+              os.execute('explorer "'..changelogurl..'"')
+            end
+          end
+        )
       end
     },
   }
 end
 --контент
 function cmdScriptInfo()
-  sampShowDialog(2342, "{348cb2}Weather and Time. Автор: qrlk.", "{ffcc00}Для чего этот скрипт?\n{ffffff}Скрипт предоставляет кучу возможностей для управления погодой и временем SA:MP.\nНаступило будущее: теперь можно рендерить дождь 2004 года без лагов.\nВыделяется среди прочих уникальными функциями, удобством и настройками.\n{AAAAAA}Функции погоды:\n{348cb2}Случайный выбор погоды: {ffffff}ИИ случайно меняет погоду каждые 3-10 минут.\n{348cb2}Изменить погоду (стабильная): {ffffff}изменение погоды на стабильную (0-22).\n{348cb2}Изменить погоду (нестабильная): {ffffff}изменение погоды на нестабильную (любой id).\n{348cb2}Открыть галерею ID погоды: {ffffff}открыть в браузере галерею с id'ами погоды.\n{AAAAAA}Функции времени:\n{348cb2}Синхронизация локального времени: {ffffff}функция меняет время игры на время компьютера.\n{348cb2}Изменить время вручную: {ffffff}изменение времени на заданный час.\n{ffcc00}Доступные команды:\n{00ccff}/weather (/wat){ffffff} - меню скрипта.\n{00ccff}/weatherlog {ffffff}- changelog скрипта.\n{AAAAAA}Функции времени:\n{00ccff}/st [0-23] {ffffff}- изменить время.\n{AAAAAA}Функции погоды:\n{00ccff}/sw {ffffff}- изменить погоду через диалоговое окно.\n{00ccff}/sw [0-22] {ffffff}- изменить погоду по id (стабильная погода).\n{00ccff}/setweather {ffffff}- изменить погоду через диалоговое окно (нестабильная погода).\n{00ccff}/setweather [любой id] {ffffff}- изменить погоду по id (нестабильная погода).\n{00ccff}Клавиша \"End\"{ffffff} - устанавливает случайную стабильную погоду. Совместимо с ИИ-режимом.", "Лады")
+  sampShowDialog(2342, "{348cb2}Weather and Time. Автор: qrlk.", "{ffcc00}Для чего этот скрипт?\n{ffffff}Скрипт предоставляет кучу возможностей для управления погодой и временем SA:MP.\nНаступило будущее: теперь можно рендерить дождь 2004 года без лагов.\nВыделяется среди прочих уникальными функциями, удобством и настройками.\n{AAAAAA}Функции погоды:\n{348cb2}Случайный выбор погоды: {ffffff}ИИ случайно меняет погоду каждые 3-10 минут.\n{348cb2}Изменить погоду (стабильная): {ffffff}изменение погоды на стабильную (0-22).\n{348cb2}Изменить погоду (нестабильная): {ffffff}изменение погоды на нестабильную (любой id).\n{348cb2}Открыть галерею ID погоды: {ffffff}открыть в браузере галерею с id'ами погоды.\n{AAAAAA}Функции времени:\n{348cb2}Синхронизация локального времени: {ffffff}функция меняет время игры на время компьютера.\n{348cb2}Изменить время вручную: {ffffff}изменение времени на заданный час.\n{ffcc00}Доступные команды:\n{00ccff}/weather (/wat){ffffff} - меню скрипта.\n{00ccff}/weatherlog {ffffff}- changelog скрипта.\n{AAAAAA}Функции времени:\n{00ccff}/st [0-23] {ffffff}- изменить время.\n{00ccff}/timelapse [0-23] [0-23] [0+] [0+] {ffffff}- timelapse.\n{AAAAAA}Функции погоды:\n{00ccff}/sw {ffffff}- изменить погоду через диалоговое окно.\n{00ccff}/sw [0-22] {ffffff}- изменить погоду по id (стабильная погода).\n{00ccff}/setweather {ffffff}- изменить погоду через диалоговое окно (нестабильная погода).\n{00ccff}/setweather [любой id] {ffffff}- изменить погоду по id (нестабильная погода).\n{00ccff}Клавиша \"End\"{ffffff} - устанавливает случайную стабильную погоду. Совместимо с ИИ-режимом.", "Лады")
 end
 function changelog()
   sampShowDialog(2342, "{348cb2}Weather & Time v"..thisScript().version.."", script_changelog, "Закрыть")
@@ -447,15 +445,7 @@ end
 --------------------------------------------------------------------------------
 --ФУНКЦИЯ ОТКРЫВАЕТ В БРАУЗЕРЕ ГАЛЕРЕЮ ПОГОД
 function cmdHelpWeather()
-  local ffi = require 'ffi'
-  ffi.cdef [[
-					void* __stdcall ShellExecuteA(void* hwnd, const char* op, const char* file, const char* params, const char* dir, int show_cmd);
-					uint32_t __stdcall CoInitializeEx(void*, uint32_t);
-				]]
-  local shell32 = ffi.load 'Shell32'
-  local ole32 = ffi.load 'Ole32'
-  ole32.CoInitializeEx(nil, 2 + 4) -- COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE
-  print(shell32.ShellExecuteA(nil, 'open', 'http://dev.prineside.com/gtasa_weather_id/', nil, nil, 1))
+  os.execute('explorer "http://dev.prineside.com/gtasa_weather_id/"')
 end
 function cmdWeather1Toggle()
   if data.options.weatherrandom == true then
@@ -492,15 +482,11 @@ end
 --------------------------------------------------------------------------------
 ------------------------------------UPDATE--------------------------------------
 --------------------------------------------------------------------------------
-function update()
-  --наш файл с версией. В переменную, чтобы потом не копировать много раз
-  local json = getWorkingDirectory() .. '\\weather-version.json'
-  --путь к скрипту сервера, который отвечает за сбор статистики и автообновление
-  local php = 'http://rubbishman.ru/dev/moonloader/weather%20and%20time/stats.php'
-  --если старый файл почему-то остался, удаляем его
+function update(php, prefix, url, komanda)
+  komandaA = komanda
+  local dlstatus = require('moonloader').download_status
+  local json = getWorkingDirectory() .. '\\'..thisScript().name..'-version.json'
   if doesFileExist(json) then os.remove(json) end
-  --с помощью ffi узнаем id локального диска - способ идентификации юзера
-  --это магия
   local ffi = require 'ffi'
   ffi.cdef[[
 	int __stdcall GetVolumeInformationA(
@@ -516,72 +502,88 @@ function update()
 	]]
   local serial = ffi.new("unsigned long[1]", 0)
   ffi.C.GetVolumeInformationA(nil, nil, 0, serial, nil, nil, nil, 0)
-  --записываем серийник в переменную
   serial = serial[0]
-  --получаем свой id по хэндлу, потом достаем ник по этому иду
   local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
   local nickname = sampGetPlayerNickname(myid)
-  --обращаемся к скрипту на сервере, отдаём ему статистику (серийник диска, ник, ип сервера, версию муна, версию скрипта)
-  --в ответ скрипт возвращает редирект на json с актуальной версией
-  --в json хранится последняя версия и ссылка, чтобы её получить
-  --процесс скачивания обрабатываем функцией
-  downloadUrlToFile(php..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version, json,
+  if thisScript().name == "ADBLOCK" then
+    if mode == nil then mode = "unsupported" end
+    php = php..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&m='..mode..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version
+  else
+    php = php..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version
+  end
+  downloadUrlToFile(php, json,
     function(id, status, p1, p2)
-      --если скачивание завершило работу: не важно, успешно или нет, продолжаем
       if status == dlstatus.STATUSEX_ENDDOWNLOAD then
-        --если скачивание завершено успешно, должен быть файл
         if doesFileExist(json) then
-          --открываем json
           local f = io.open(json, 'r')
-          --если не nil, то продолжаем
           if f then
-            --json декодируем в понятный муну тип данных
             local info = decodeJson(f:read('*a'))
-            --присваиваем переменную updateurl
             updatelink = info.updateurl
-            updateversion = tonumber(info.latest)
-            --закрываем файл
+            updateversion = info.latest
+            if info.changelog ~= nil then
+              changelogurl = info.changelog
+            end
             f:close()
-            --удаляем json, он нам не нужен
             os.remove(json)
-            if updateversion > tonumber(thisScript().version) then
-              --запускаем скачивание новой версии
-              lua_thread.create(goupdate)
+            if updateversion ~= thisScript().version then
+              lua_thread.create(function(prefix, komanda)
+                local dlstatus = require('moonloader').download_status
+                local color = -1
+                sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
+                wait(250)
+                downloadUrlToFile(updatelink, thisScript().path,
+                  function(id3, status1, p13, p23)
+                    if status1 == dlstatus.STATUS_DOWNLOADINGDATA then
+                      print(string.format('Загружено %d из %d.', p13, p23))
+                    elseif status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
+                      print('Загрузка обновления завершена.')
+                      if komandaA ~= nil then
+                        sampAddChatMessage((prefix..'Обновление завершено! Подробнее об обновлении - /'..komandaA..'.'), color)
+                      end
+                      goupdatestatus = true
+                      lua_thread.create(function() wait(500) thisScript():reload() end)
+                    end
+                    if status1 == dlstatus.STATUSEX_ENDDOWNLOAD then
+                      if goupdatestatus == nil then
+                        sampAddChatMessage((prefix..'Обновление прошло неудачно. Запускаю устаревшую версию..'), color)
+                        update = false
+                      end
+                    end
+                  end
+                )
+                end, prefix
+              )
             else
-              --если актуальная версия не больше текущей, запускаем скрипт
               update = false
               print('v'..thisScript().version..': Обновление не требуется.')
             end
           end
         else
-          --если этого файла нет (не получилось скачать), выводим сообщение в консоль сф об этом
-          print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на http://rubbishman.ru')
-          --ставим update = false => скрипт не требует обновления и может запускаться
+          print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..url)
           update = false
         end
       end
-  end)
+    end
+  )
+  while update ~= false do wait(100) end
 end
---скачивание актуальной версии
-function goupdate()
-  local color = -1
-  sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
-  wait(250)
-  downloadUrlToFile(updatelink, thisScript().path,
-    function(id3, status1, p13, p23)
-      if status1 == dlstatus.STATUS_DOWNLOADINGDATA then
-        print(string.format('Загружено %d из %d.', p13, p23))
-      elseif status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-        print('Загрузка обновления завершена.')
-        sampAddChatMessage((prefix..'Обновление завершено! Подробнее об обновлении - /weatherlog.'), color)
-        goupdatestatus = true
-        thisScript():reload()
-      end
-      if status1 == dlstatus.STATUSEX_ENDDOWNLOAD then
-        if goupdatestatus == nil then
-          sampAddChatMessage((prefix..'Обновление прошло неудачно. Запускаю устаревшую версию..'), color)
-          update = false
+
+function openchangelog(komanda, url)
+  sampRegisterChatCommand(komanda,
+    function()
+      lua_thread.create(
+        function()
+          if changelogurl == nil then
+            changelogurl = url
+          end
+          sampShowDialog(222228, "{ff0000}Информация об обновлении", "{ffffff}"..thisScript().name.." {ffe600}собирается открыть свой changelog для вас.\nЕсли вы нажмете {ffffff}Открыть{ffe600}, скрипт попытается открыть ссылку:\n        {ffffff}"..changelogurl.."\n{ffe600}Если ваша игра крашнется, вы можете открыть эту ссылку сами.", "Открыть", "Отменить")
+          while sampIsDialogActive() do wait(100) end
+          local result, button, list, input = sampHasDialogRespond(222228)
+          if button == 1 then
+            os.execute('explorer "'..changelogurl..'"')
+          end
         end
-      end
-  end)
+      )
+    end
+  )
 end
