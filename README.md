@@ -1,11 +1,49 @@
+<p align="center"><h1 align="center">weather-and-time
+</br>
+<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28active%29&query=result&url=https%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_active.php%3Fscript%3Dwat">
+
+<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28all%20time%29&query=result&url=https%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_all.php%3Fscript%3Dwat">
+
+</p></h1>
+
+<p align="center">
+
+<img src="https://img.shields.io/badge/made%20for-GTA%20SA--MP-blue" >
+
+<img src="https://img.shields.io/badge/Server-Any-red">
+
+<img src="https://img.shields.io/github/languages/top/qrlk/weather-and-time">
+
+<img src="https://img.shields.io/badge/moonloader-v.026.5--beta-blue" >
+
+<img src="https://img.shields.io/badge/deps-CLEO%204+,%20SAMPFUNCS%205+-blue" >
+
+<img src="https://img.shields.io/github/license/qrlk/weather-and-time">
+</p>
+
+
+A **[moonloader](https://gtaforums.com/topic/890987-moonloader/)** script that allows you to manage the weather and time in **[gta samp](https://sa-mp.com/)**.  
+
+It also requires **[CLEO 4+](http://cleo.li/?lang=ru)** and **[SAMPFUNCS 5+](https://blast.hk/threads/17/)**.
+
+---
+
+**The following description is in Russian, because it is the main language of the user base**.
+
 # Описание 
 Скрипт добавляет кучу возможностей для управления погодой и временем. Отличается от похожих стабильностью, некоторыми уникальными функциями, удобством использования (не нужно учить таблицу погоды) и сохранением настроек (если установил погоду/время, то она никогда не "слетит", даже после релога).
 
-**Требования:** [CLEO 4+](http://cleo.li/?lang=ru), [SAMPFUNCS 5.3.3](https://blast.hk/threads/17/), [MoonLoader](https://blast.hk/threads/13305/).  
+**Требования:** [CLEO 4+](http://cleo.li/?lang=ru), [SAMPFUNCS 5+](https://blast.hk/threads/17/), [MoonLoader](https://blast.hk/threads/13305/).  
 **Активация:** Скрипт активируется автоматом, а настроить его можно в собственной менюшке (/weather или /wat). В скрипте реализовано автообновление (можно отключить в настройках).  
 
-**Автор:** [qrlk (James_Bond / Phil_Coulson)](http://rubbishman.ru/samp).  
-**Обсуждение в группе VK:** [ссылка](https://vk.com/topic-168860334_38597259).
+
+# Ссылки
+* **Автор:** [qrlk](https://qrlk.me/).  
+* **Тема на BlastHack:** [ссылка](https://www.blast.hk/threads/19459/).
+* **Страница в группе VK:** [ссылка](https://vk.com/qrlk.mods?w=page-168860334_54271682).
+* **Список скриптов QRLK MODS:** [ссылка](https://vk.com/qrlk.mods?w=page-168860334_54271482).
+
+P.S. Группа VK не обновляется.
 ## Функции погоды:
 
 * **Случайный выбор погоды.**
