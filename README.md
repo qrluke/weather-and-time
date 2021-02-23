@@ -16,7 +16,6 @@
 
 </p>
 
-
 A **[moonloader](https://gtaforums.com/topic/890987-moonloader/)** script that allows you to manage the weather and time in **[gta samp](https://sa-mp.com/)**.  
 
 It also requires **[CLEO 4+](http://cleo.li/?lang=ru)** and **[SAMPFUNCS 5+](https://blast.hk/threads/17/)**.
