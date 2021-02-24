@@ -30,14 +30,6 @@ It also requires **[CLEO 4+](http://cleo.li/?lang=ru)** and **[SAMPFUNCS 5+](htt
 **Требования:** [CLEO 4+](http://cleo.li/?lang=ru), [SAMPFUNCS 5+](https://blast.hk/threads/17/), [MoonLoader](https://blast.hk/threads/13305/).  
 **Активация:** Скрипт активируется автоматом, а настроить его можно в собственной менюшке (/weather или /wat). В скрипте реализовано автообновление (можно отключить в настройках).  
 
-
-# Ссылки
-* **Автор:** [qrlk](https://qrlk.me/).  
-* **Тема на BlastHack:** [ссылка](https://www.blast.hk/threads/19459/).
-* **Страница в группе VK:** [ссылка](https://vk.com/qrlk.mods?w=page-168860334_54271682).
-* **Список скриптов QRLK MODS:** [ссылка](https://vk.com/qrlk.mods?w=page-168860334_54271482).
-
-P.S. Группа VK не обновляется.
 ## Функции погоды:
 
 * **Случайный выбор погоды.**
@@ -70,3 +62,11 @@ P.S. Группа VK не обновляется.
 ![https://i.imgur.com/EcCpOim.png?1](https://i.imgur.com/EcCpOim.png?1)  
 ![https://i.imgur.com/zXQlH89.jpg?2](https://i.imgur.com/zXQlH89.jpg?2)  
 ![https://i.imgur.com/7lQrOZq.jpg?2](https://i.imgur.com/7lQrOZq.jpg?2)  
+
+## Ссылки
+* [Автор](http://qrlk.me/)
+* [Тема на BlastHack](https://www.blast.hk/threads/19459/)
+* [Страница в группе VK](https://vk.com/qrlk.mods?w=page-168860334_54271682)
+* [Список скриптов QRLK MODS](https://vk.com/qrlk.mods?w=page-168860334_54271482)
+
+P.S. Группа VK не обновляется.
