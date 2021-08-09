@@ -8,9 +8,9 @@
 
 <img src="https://img.shields.io/github/languages/top/qrlk/weather-and-time">
 
-<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28active%29&query=result&url=http%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_active.php%3Fscript%3Dwat">
+<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28active%29&query=result&url=http%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_active.php%3Fscript%3Dweather%2520and%2520time">
 
-<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28all%20time%29&query=result&url=http%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_all.php%3Fscript%3Dwat">
+<img src="https://img.shields.io/badge/dynamic/json?color=blueviolet&label=users%20%28all%20time%29&query=result&url=http%3A%2F%2Fqrlk.me%2Fdev%2Fmoonloader%2Fusers_all.php%3Fscript%3Dweather%2520and%2520time">
 
 <img src="https://img.shields.io/date/1511384400?label=released" >
 
@@ -23,7 +23,9 @@ It also requires **[CLEO 4+](http://cleo.li/?lang=ru)** and **[SAMPFUNCS 5+](htt
 ---
 
 **The following description is in Russian, because it is the main language of the user base**.
-
+<details>
+  <summary>Описание на русском языке.</summary>
+ 
 # Описание 
 Скрипт добавляет кучу возможностей для управления погодой и временем. Отличается от похожих стабильностью, некоторыми уникальными функциями, удобством использования (не нужно учить таблицу погоды) и сохранением настроек (если установил погоду/время, то она никогда не "слетит", даже после релога).
 
@@ -70,3 +72,4 @@ It also requires **[CLEO 4+](http://cleo.li/?lang=ru)** and **[SAMPFUNCS 5+](htt
 * [Список скриптов QRLK MODS](https://vk.com/qrlk.mods?w=page-168860334_54271482)
 
 P.S. Группа VK не обновляется.
+</details>
