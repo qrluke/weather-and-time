@@ -5,8 +5,8 @@
 script_name("Weather and Time")
 script_version("30.06.2019-2")
 script_author("qrlk")
-script_url("http://qrlk.me/samp/wat")
 script_description("Мощный инструмент для изменения внутриигрового погоды и времени.")
+script_url("https://github.com/qrlk/weather-and-time")
 --------------------------------------VAR---------------------------------------
 local dlstatus = require('moonloader').download_status
 color = 0x348cb2
