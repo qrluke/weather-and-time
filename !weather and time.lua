@@ -21,7 +21,6 @@ local data = inicfg.load({
     autoupdate = 1,
     lastw = 1,
     lastt = 25,
-    showad = true,
   },
 }, 'weather and time')
 --------------------------------------------------------------------------------
@@ -34,14 +33,7 @@ function main()
     update("http://qrlk.me/dev/moonloader/weather%20and%20time/stats.php", '['..string.upper(thisScript().name)..']: ', "http://qrlk.me/sampvk", "watchangelog")
   end
   openchangelog("watchangelog", "http://qrlk.me/changelog/wat")
-  if data.options.showad == true then
-    sampAddChatMessage("[WAT]: Внимание! У нас появилась группа ВКонтакте: vk.com/qrlk.mods", - 1)
-    sampAddChatMessage("[WAT]: Подписавшись на неё, вы сможете получать новости об обновлениях,", - 1)
-    sampAddChatMessage("[WAT]: новых скриптах, а так же учавствовать в розыгрышах платных скриптов!", - 1)
-    sampAddChatMessage("[WAT]: Это сообщение показывается один раз для каждого скрипта. Спасибо за внимание.", - 1)
-    data.options.showad = false
-    inicfg.save(data, "weather and time")
-  end
+
   if data.options.timebycomp1 == false and data.options.lastt ~= 25 then time = data.options.lastt end
   onload()
   menuupdate()
