@@ -3,7 +3,7 @@ require 'lib.moonloader'
 -------------------------------------META---------------------------------------
 --------------------------------------------------------------------------------
 script_name("Weather and Time")
-script_version("30.06.2019-2")
+script_version("25.06.2022")
 script_author("qrlk")
 script_description("Мощный инструмент для изменения внутриигрового погоды и времени.")
 script_url("https://github.com/qrlk/weather-and-time")
