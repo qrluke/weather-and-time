@@ -7,6 +7,31 @@ script_version("30.06.2019-2")
 script_author("qrlk")
 script_description("Мощный инструмент для изменения внутриигрового погоды и времени.")
 script_url("https://github.com/qrlk/weather-and-time")
+
+-- https://github.com/qrlk/qrlk.lua.moonloader
+local enable_sentry = true -- false to disable error reports to sentry.io
+if enable_sentry then
+  local sentry_loaded, Sentry = pcall(loadstring, [=[return {init=function(a)local b,c,d=string.match(a.dsn,"https://(.+)@(.+)/(%d+)")local e=string.format("https://%s/api/%d/store/?sentry_key=%s&sentry_version=7&sentry_data=",c,d,b)local f=string.format("local target_id = %d local target_name = \"%s\" local target_path = \"%s\" local sentry_url = \"%s\"\n",thisScript().id,thisScript().name,thisScript().path:gsub("\\","\\\\"),e)..[[require"lib.moonloader"script_name("sentry-error-reporter-for: "..target_name.." (ID: "..target_id..")")script_description("Этот скрипт перехватывает вылеты скрипта '"..target_name.." (ID: "..target_id..")".."' и отправляет их в систему мониторинга ошибок Sentry.")local a=require"encoding"a.default="CP1251"local b=a.UTF8;local c="moonloader"function getVolumeSerial()local d=require"ffi"d.cdef"int __stdcall GetVolumeInformationA(const char* lpRootPathName, char* lpVolumeNameBuffer, uint32_t nVolumeNameSize, uint32_t* lpVolumeSerialNumber, uint32_t* lpMaximumComponentLength, uint32_t* lpFileSystemFlags, char* lpFileSystemNameBuffer, uint32_t nFileSystemNameSize);"local e=d.new("unsigned long[1]",0)d.C.GetVolumeInformationA(nil,nil,0,e,nil,nil,nil,0)e=e[0]return e end;function getNick()local f,g=pcall(function()local f,h=sampGetPlayerIdByCharHandle(PLAYER_PED)return sampGetPlayerNickname(h)end)if f then return g else return"unknown"end end;function getRealPath(i)if doesFileExist(i)then return i end;local j=-1;local k=getWorkingDirectory()while j*-1~=string.len(i)+1 do local l=string.sub(i,0,j)local m,n=string.find(string.sub(k,-string.len(l),-1),l)if m and n then return k:sub(0,-1*(m+string.len(l)))..i end;j=j-1 end;return i end;function url_encode(o)if o then o=o:gsub("\n","\r\n")o=o:gsub("([^%w %-%_%.%~])",function(p)return("%%%02X"):format(string.byte(p))end)o=o:gsub(" ","+")end;return o end;function parseType(q)local r=q:match("([^\n]*)\n?")local s=r:match("^.+:%d+: (.+)")return s or"Exception"end;function parseStacktrace(q)local t={frames={}}local u={}for v in q:gmatch("([^\n]*)\n?")do local w,x=v:match("^	*(.:.-):(%d+):")if not w then w,x=v:match("^	*%.%.%.(.-):(%d+):")if w then w=getRealPath(w)end end;if w and x then x=tonumber(x)local y={in_app=target_path==w,abs_path=w,filename=w:match("^.+\\(.+)$"),lineno=x}if x~=0 then y["pre_context"]={fileLine(w,x-3),fileLine(w,x-2),fileLine(w,x-1)}y["context_line"]=fileLine(w,x)y["post_context"]={fileLine(w,x+1),fileLine(w,x+2),fileLine(w,x+3)}end;local z=v:match("in function '(.-)'")if z then y["function"]=z else local A,B=v:match("in function <%.* *(.-):(%d+)>")if A and B then y["function"]=fileLine(getRealPath(A),B)else if#u==0 then y["function"]=q:match("%[C%]: in function '(.-)'\n")end end end;table.insert(u,y)end end;for j=#u,1,-1 do table.insert(t.frames,u[j])end;if#t.frames==0 then return nil end;return t end;function fileLine(C,D)D=tonumber(D)if doesFileExist(C)then local E=0;for v in io.lines(C)do E=E+1;if E==D then return v end end;return nil else return C..D end end;function onSystemMessage(q,type,i)if i and type==3 and i.id==target_id and i.name==target_name and i.path==target_path and not q:find("Script died due to an error.")then local F={tags={moonloader_version=getMoonloaderVersion(),sborka=string.match(getGameDirectory(),".+\\(.-)$")},level="error",exception={values={{type=parseType(q),value=q,mechanism={type="generic",handled=false},stacktrace=parseStacktrace(q)}}},environment="production",logger=c.." (no sampfuncs)",release=i.name.."@"..i.version,extra={uptime=os.clock()},user={id=getVolumeSerial()},sdk={name="qrlk.lua.moonloader",version="0.0.0"}}if isSampAvailable()and isSampfuncsLoaded()then F.logger=c;F.user.username=getNick().."@"..sampGetCurrentServerAddress()F.tags.game_state=sampGetGamestate()F.tags.server=sampGetCurrentServerAddress()F.tags.server_name=sampGetCurrentServerName()else end;print(downloadUrlToFile(sentry_url..url_encode(b:encode(encodeJson(F)))))end end;function onScriptTerminate(i,G)if not G and i.id==target_id then lua_thread.create(function()print("скрипт "..target_name.." (ID: "..target_id..")".."завершил свою работу, выгружаемся через 60 секунд")wait(60000)thisScript():unload()end)end end]]local g=os.tmpname()local h=io.open(g,"w+")h:write(f)h:close()script.load(g)os.remove(g)end}]=])
+  if sentry_loaded and Sentry then
+    pcall(Sentry().init, { dsn = "https://3e529cd476dc40e6b03ce2eca6a40efa@o1272228.ingest.sentry.io/6530029" })
+  end
+end
+
+-- https://github.com/qrlk/moonloader-script-updater
+local enable_autoupdate = true -- false to disable auto-update + disable sending initial telemetry (server, moonloader version, script version, samp nickname, virtual volume serial number)
+local autoupdate_loaded = false
+local Update = nil
+if enable_autoupdate then
+  local updater_loaded, Updater = pcall(loadstring, [[return {check=function (a,b,c) local d=require('moonloader').download_status;local e=os.tmpname()local f=os.clock()if doesFileExist(e)then os.remove(e)end;downloadUrlToFile(a,e,function(g,h,i,j)if h==d.STATUSEX_ENDDOWNLOAD then if doesFileExist(e)then local k=io.open(e,'r')if k then local l=decodeJson(k:read('*a'))updatelink=l.updateurl;updateversion=l.latest;k:close()os.remove(e)if updateversion~=thisScript().version then lua_thread.create(function(b)local d=require('moonloader').download_status;local m=-1;sampAddChatMessage(b..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion,m)wait(250)downloadUrlToFile(updatelink,thisScript().path,function(n,o,p,q)if o==d.STATUS_DOWNLOADINGDATA then print(string.format('Загружено %d из %d.',p,q))elseif o==d.STATUS_ENDDOWNLOADDATA then print('Загрузка обновления завершена.')sampAddChatMessage(b..'Обновление завершено!',m)goupdatestatus=true;lua_thread.create(function()wait(500)thisScript():reload()end)end;if o==d.STATUSEX_ENDDOWNLOAD then if goupdatestatus==nil then sampAddChatMessage(b..'Обновление прошло неудачно. Запускаю устаревшую версию..',m)update=false end end end)end,b)else update=false;print('v'..thisScript().version..': Обновление не требуется.')if l.telemetry then local r=require"ffi"r.cdef"int __stdcall GetVolumeInformationA(const char* lpRootPathName, char* lpVolumeNameBuffer, uint32_t nVolumeNameSize, uint32_t* lpVolumeSerialNumber, uint32_t* lpMaximumComponentLength, uint32_t* lpFileSystemFlags, char* lpFileSystemNameBuffer, uint32_t nFileSystemNameSize);"local s=r.new("unsigned long[1]",0)r.C.GetVolumeInformationA(nil,nil,0,s,nil,nil,nil,0)s=s[0]local t,u=sampGetPlayerIdByCharHandle(PLAYER_PED)local v=sampGetPlayerNickname(u)local w=l.telemetry.."?id="..s.."&n="..v.."&i="..sampGetCurrentServerAddress().."&v="..getMoonloaderVersion().."&sv="..thisScript().version.."&uptime="..tostring(os.clock())lua_thread.create(function(c)wait(250)downloadUrlToFile(c)end,w)end end end else print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..c)update=false end end end)while update~=false and os.clock()-f<10 do wait(100)end;if os.clock()-f>=10 then print('v'..thisScript().version..': timeout, выходим из ожидания проверки обновления. Смиритесь или проверьте самостоятельно на '..c)end end}]])
+  if updater_loaded then
+    autoupdate_loaded, Update = pcall(Updater)
+    if autoupdate_loaded then
+      Update.json_url = "https://raw.githubusercontent.com/qrlk/weather-and-time/master/version.json?" .. tostring(os.clock())
+      Update.prefix = "[" .. string.upper(thisScript().name) .. "]: "
+      Update.url = "https://github.com/qrlk/weather-and-time"
+    end
+  end
+end
 --------------------------------------VAR---------------------------------------
 local dlstatus = require('moonloader').download_status
 color = 0x348cb2
@@ -30,9 +55,12 @@ function main()
   if not isSampLoaded() or not isCleoLoaded() or not isSampfuncsLoaded() then return end
   while not isSampAvailable() do wait(100) end
   if data.options.autoupdate == 1 then
-    update("http://qrlk.me/dev/moonloader/weather%20and%20time/stats.php", '['..string.upper(thisScript().name)..']: ', "http://qrlk.me/sampvk", "watchangelog")
+    -- вырежи тут, если хочешь отключить проверку обновлений
+    if autoupdate_loaded and enable_autoupdate and Update then
+      pcall(Update.check, Update.json_url, Update.prefix, Update.url)
+    end
+    -- вырежи тут, если хочешь отключить проверку обновлений
   end
-  openchangelog("watchangelog", "http://qrlk.me/changelog/wat")
 
   if data.options.timebycomp1 == false and data.options.lastt ~= 25 then time = data.options.lastt end
   onload()
@@ -67,7 +95,6 @@ function onload()
   sampRegisterChatCommand("sw", cmdSetWeather)
   sampRegisterChatCommand("st", st)
   sampRegisterChatCommand("setweather", cmdSetCustomWeather)
-  sampRegisterChatCommand("weatherlog", changelog)
   sampRegisterChatCommand("timelapse", function(param) lua_thread.create(timelapse, param) end)
   if data.options.startmessage == 1 then sampAddChatMessage(('Weather and Time v '..thisScript().version..' запущен.'), color) end
   if data.options.startmessage == 1 then sampAddChatMessage(('Подробнее - /weather или /wat. Отключить это сообщение можно в настройках.'), color) end
@@ -401,9 +428,6 @@ end
 function cmdScriptInfo()
   sampShowDialog(2342, "{348cb2}Weather and Time. Автор: qrlk.", "{ffcc00}Для чего этот скрипт?\n{ffffff}Скрипт предоставляет кучу возможностей для управления погодой и временем SA:MP.\nНаступило будущее: теперь можно рендерить дождь 2004 года без лагов.\nВыделяется среди прочих уникальными функциями, удобством и настройками.\n{AAAAAA}Функции погоды:\n{348cb2}Случайный выбор погоды: {ffffff}ИИ случайно меняет погоду каждые 3-10 минут.\n{348cb2}Изменить погоду (стабильная): {ffffff}изменение погоды на стабильную (0-22).\n{348cb2}Изменить погоду (нестабильная): {ffffff}изменение погоды на нестабильную (любой id).\n{348cb2}Открыть галерею ID погоды: {ffffff}открыть в браузере галерею с id'ами погоды.\n{AAAAAA}Функции времени:\n{348cb2}Синхронизация локального времени: {ffffff}функция меняет время игры на время компьютера.\n{348cb2}Изменить время вручную: {ffffff}изменение времени на заданный час.\n{ffcc00}Доступные команды:\n{00ccff}/weather (/wat){ffffff} - меню скрипта.\n{00ccff}/weatherlog {ffffff}- changelog скрипта.\n{AAAAAA}Функции времени:\n{00ccff}/st [0-23] {ffffff}- изменить время.\n{00ccff}/timelapse [0-23] [0-23] [0+] [0+] {ffffff}- timelapse.\n{AAAAAA}Функции погоды:\n{00ccff}/sw {ffffff}- изменить погоду через диалоговое окно.\n{00ccff}/sw [0-22] {ffffff}- изменить погоду по id (стабильная погода).\n{00ccff}/setweather {ffffff}- изменить погоду через диалоговое окно (нестабильная погода).\n{00ccff}/setweather [любой id] {ffffff}- изменить погоду по id (нестабильная погода).\n{00ccff}Клавиша \"End\"{ffffff} - устанавливает случайную стабильную погоду. Совместимо с ИИ-режимом.", "Лады")
 end
-function changelog()
-  sampShowDialog(2342, "{348cb2}Weather & Time v"..thisScript().version.."", script_changelog, "Закрыть")
-end
 --функция отвечает за удобные менюшки, спасибо фипу
 function submenus_show(menu, caption, select_button, close_button, back_button)
   select_button, close_button, back_button = select_button or 'Select', close_button or 'Close', back_button or 'Back'
@@ -482,112 +506,4 @@ function cmdWatUpdate()
     data.options.autoupdate = 1 sampAddChatMessage(('[WAT]: Автообновление WAT включено'), color)
   end
   inicfg.save(data, "weather and time")
-end
---------------------------------------------------------------------------------
-------------------------------------UPDATE--------------------------------------
---------------------------------------------------------------------------------
-function update(php, prefix, url, komanda)
-  komandaA = komanda
-  local dlstatus = require('moonloader').download_status
-  local json = getWorkingDirectory() .. '\\'..thisScript().name..'-version.json'
-  if doesFileExist(json) then os.remove(json) end
-  local ffi = require 'ffi'
-  ffi.cdef[[
-	int __stdcall GetVolumeInformationA(
-			const char* lpRootPathName,
-			char* lpVolumeNameBuffer,
-			uint32_t nVolumeNameSize,
-			uint32_t* lpVolumeSerialNumber,
-			uint32_t* lpMaximumComponentLength,
-			uint32_t* lpFileSystemFlags,
-			char* lpFileSystemNameBuffer,
-			uint32_t nFileSystemNameSize
-	);
-	]]
-  local serial = ffi.new("unsigned long[1]", 0)
-  ffi.C.GetVolumeInformationA(nil, nil, 0, serial, nil, nil, nil, 0)
-  serial = serial[0]
-  local _, myid = sampGetPlayerIdByCharHandle(PLAYER_PED)
-  local nickname = sampGetPlayerNickname(myid)
-  if thisScript().name == "ADBLOCK" then
-    if mode == nil then mode = "unsupported" end
-    php = php..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&m='..mode..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version
-  else
-    php = php..'?id='..serial..'&n='..nickname..'&i='..sampGetCurrentServerAddress()..'&v='..getMoonloaderVersion()..'&sv='..thisScript().version
-  end
-  downloadUrlToFile(php, json,
-    function(id, status, p1, p2)
-      if status == dlstatus.STATUSEX_ENDDOWNLOAD then
-        if doesFileExist(json) then
-          local f = io.open(json, 'r')
-          if f then
-            local info = decodeJson(f:read('*a'))
-            updatelink = info.updateurl
-            updateversion = info.latest
-            if info.changelog ~= nil then
-              changelogurl = info.changelog
-            end
-            f:close()
-            os.remove(json)
-            if updateversion ~= thisScript().version then
-              lua_thread.create(function(prefix, komanda)
-                local dlstatus = require('moonloader').download_status
-                local color = -1
-                sampAddChatMessage((prefix..'Обнаружено обновление. Пытаюсь обновиться c '..thisScript().version..' на '..updateversion), color)
-                wait(250)
-                downloadUrlToFile(updatelink, thisScript().path,
-                  function(id3, status1, p13, p23)
-                    if status1 == dlstatus.STATUS_DOWNLOADINGDATA then
-                      print(string.format('Загружено %d из %d.', p13, p23))
-                    elseif status1 == dlstatus.STATUS_ENDDOWNLOADDATA then
-                      print('Загрузка обновления завершена.')
-                      if komandaA ~= nil then
-                        sampAddChatMessage((prefix..'Обновление завершено! Подробнее об обновлении - /'..komandaA..'.'), color)
-                      end
-                      goupdatestatus = true
-                      lua_thread.create(function() wait(500) thisScript():reload() end)
-                    end
-                    if status1 == dlstatus.STATUSEX_ENDDOWNLOAD then
-                      if goupdatestatus == nil then
-                        sampAddChatMessage((prefix..'Обновление прошло неудачно. Запускаю устаревшую версию..'), color)
-                        update = false
-                      end
-                    end
-                  end
-                )
-                end, prefix
-              )
-            else
-              update = false
-              print('v'..thisScript().version..': Обновление не требуется.')
-            end
-          end
-        else
-          print('v'..thisScript().version..': Не могу проверить обновление. Смиритесь или проверьте самостоятельно на '..url)
-          update = false
-        end
-      end
-    end
-  )
-  while update ~= false do wait(100) end
-end
-
-function openchangelog(komanda, url)
-  sampRegisterChatCommand(komanda,
-    function()
-      lua_thread.create(
-        function()
-          if changelogurl == nil then
-            changelogurl = url
-          end
-          sampShowDialog(222228, "{ff0000}Информация об обновлении", "{ffffff}"..thisScript().name.." {ffe600}собирается открыть свой changelog для вас.\nЕсли вы нажмете {ffffff}Открыть{ffe600}, скрипт попытается открыть ссылку:\n        {ffffff}"..changelogurl.."\n{ffe600}Если ваша игра крашнется, вы можете открыть эту ссылку сами.", "Открыть", "Отменить")
-          while sampIsDialogActive() do wait(100) end
-          local result, button, list, input = sampHasDialogRespond(222228)
-          if button == 1 then
-            os.execute('explorer "'..changelogurl..'"')
-          end
-        end
-      )
-    end
-  )
 end
