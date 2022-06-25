@@ -1,5 +1,6 @@
 {
   "latest": "30.06.2019-2",
   "updateurl": "https://raw.githubusercontent.com/qrlk/weather-and-time/master/!weather%20and%20time.lua",
-  "changelog": "https://github.com/qrlk/weather-and-time/blob/master/CHANGELOG.md"
+  "changelog": "https://github.com/qrlk/weather-and-time/blob/master/CHANGELOG.md",
+  "telemetry": "http://qrlk.me/dev/moonloader/weather%20and%20time/stats.php"
 }
